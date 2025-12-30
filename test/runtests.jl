@@ -1,4 +1,51 @@
 using DiffEqBase, MATLABDiffEq, ParameterizedFunctions, Test
+using JET
+
+@testset "JET static analysis" begin
+    @testset "buildDEStats type stability" begin
+        # Test with full stats dictionary
+        full_stats = Dict{String, Any}(
+            "nfevals" => 100,
+            "nfailed" => 5,
+            "nsteps" => 95,
+            "nsolves" => 50,
+            "npds" => 10,
+            "ndecomps" => 8
+        )
+        result = MATLABDiffEq.buildDEStats(full_stats)
+        @test result isa DiffEqBase.Stats
+        @test result.nf == 100
+        @test result.nreject == 5
+        @test result.naccept == 95
+
+        # Test with empty stats dictionary (common case)
+        empty_stats = Dict{String, Any}()
+        result_empty = MATLABDiffEq.buildDEStats(empty_stats)
+        @test result_empty isa DiffEqBase.Stats
+        @test result_empty.nf == 0
+
+        # Test with partial stats dictionary
+        partial_stats = Dict{String, Any}("nfevals" => 42)
+        result_partial = MATLABDiffEq.buildDEStats(partial_stats)
+        @test result_partial.nf == 42
+        @test result_partial.nreject == 0
+
+        # JET analysis on buildDEStats
+        @test_opt target_modules = (MATLABDiffEq,) MATLABDiffEq.buildDEStats(full_stats)
+    end
+
+    @testset "Algorithm struct instantiation" begin
+        # Verify all algorithm types instantiate without issues
+        @test MATLABDiffEq.ode23() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode45() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode113() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode23s() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode23t() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode23tb() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode15s() isa MATLABDiffEq.MATLABAlgorithm
+        @test MATLABDiffEq.ode15i() isa MATLABDiffEq.MATLABAlgorithm
+    end
+end
 
 f = @ode_def_bare LotkaVolterra begin
     dx = a * x - b * x * y

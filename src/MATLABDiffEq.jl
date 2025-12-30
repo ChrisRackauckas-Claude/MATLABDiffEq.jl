@@ -118,38 +118,14 @@ function DiffEqBase.__solve(
     )
 end
 
-function buildDEStats(solverstats::Dict)
+function buildDEStats(solverstats::Dict{String, Any})::DiffEqBase.Stats
     destats = DiffEqBase.Stats(0)
-    destats.nf = if (haskey(solverstats, "nfevals"))
-        solverstats["nfevals"]
-    else
-        0
-    end
-    destats.nreject = if (haskey(solverstats, "nfailed"))
-        solverstats["nfailed"]
-    else
-        0
-    end
-    destats.naccept = if (haskey(solverstats, "nsteps"))
-        solverstats["nsteps"]
-    else
-        0
-    end
-    destats.nsolve = if (haskey(solverstats, "nsolves"))
-        solverstats["nsolves"]
-    else
-        0
-    end
-    destats.njacs = if (haskey(solverstats, "npds"))
-        solverstats["npds"]
-    else
-        0
-    end
-    destats.nw = if (haskey(solverstats, "ndecomps"))
-        solverstats["ndecomps"]
-    else
-        0
-    end
+    destats.nf = get(solverstats, "nfevals", 0)
+    destats.nreject = get(solverstats, "nfailed", 0)
+    destats.naccept = get(solverstats, "nsteps", 0)
+    destats.nsolve = get(solverstats, "nsolves", 0)
+    destats.njacs = get(solverstats, "npds", 0)
+    destats.nw = get(solverstats, "ndecomps", 0)
     destats
 end
 
